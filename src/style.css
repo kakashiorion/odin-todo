@@ -1,0 +1,211 @@
+:root {
+    --lightColor: #F6E8EA;
+    --primaryColor: #EF626C;
+    --darkColor: #22181C;
+    --secondaryColor: #84DCCF;
+}
+
+body {
+    margin: 0px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+#header {
+    background-color: var(--darkColor);
+    opacity: 0.8;
+    color: white;
+    height: 6vh;
+    font-weight: 600;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 10px;
+    width: 100%;
+}
+
+#content {
+    display: grid;
+    height: 94vh;
+    width: 100%;
+    grid-template-columns: 368px 3fr;
+}
+
+#projectPane {
+    background-color: white;
+    padding: 8px 16px 0px 16px;
+    font-weight: bold;
+    font-size: 20px;
+    overflow: scroll;
+    position: relative;
+    height: 85%;
+    border-bottom: 1px solid lightgray;
+    /* overflow: hidden; */
+}
+
+#listPane {
+    background-color: var(--lightColor);
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 48px 480px 48px;
+    gap: 16px;
+}
+
+#listTitle {
+    height: 48px;
+    margin: 24px;
+    background-color: white;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    /* border: 1px solid lightgrey; */
+    border-radius: 4px;
+    display: flex;
+    padding: 8px;
+    align-items: center;
+    box-sizing: border-box;
+
+}
+
+#listDueDate {
+    height: 48px;
+    margin: 24px;
+    background-color: white;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    /* border: 1px solid lightgrey; */
+    border-radius: 4px;
+    display: flex;
+    padding: 8px;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+#listContent {
+    height: 480px;
+    margin: 24px;
+    background-color: white;
+    grid-column-start: 1;
+    grid-column-end: 3;
+    /* border: 1px solid lightgrey; */
+    border-radius: 4px;
+}
+
+#listAction {
+    height: 48px;
+    margin: 24px;
+    border: 1px solid var(--primaryColor);
+    border-radius: 4px;
+    grid-column-start: 1;
+    grid-column-end: 2;
+    display: flex;
+}
+
+#listParentProject {
+    height: 48px;
+    margin: 24px;
+    /* border: 1px solid var(--primaryColor); */
+    border-radius: 4px;
+    grid-column-start: 2;
+    grid-column-end: 3;
+    display: flex;
+    justify-content: space-between;
+    padding: 0px 0px 0px 16px;
+    align-items: center;
+    background-color: white;
+}
+
+#listParentProjectDropdown {
+    width: 60%;
+    height: 100%;
+    background-color: var(--primaryColor);
+    border-radius: 4px;
+    border: none;
+    padding: 8px;
+    color: white;
+}
+
+#newProjectButton {
+    height: 48px;
+    width: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    font-size: 14px;
+    background-color: var(--darkColor);
+    color: white;
+    border-radius: 32px;
+    border: none;
+    box-shadow: 1px 1px var(--lightColor);
+}
+
+#newListButton {
+    height: 48px;
+    width: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 192px;
+    bottom: 16px;
+    font-size: 14px;
+    background-color: var(--primaryColor);
+    color: white;
+    border-radius: 32px;
+    border: none;
+    box-shadow: 1px 1px var(--darkColor);
+}
+
+.projects {
+    display: block;
+    font-weight: 600;
+    font-size: 16px;
+    height: max(40px, auto);
+    width: auto;
+    padding: 8px 12px;
+    margin: 16px 0px;
+    align-items: center;
+    border-radius: 4px;
+    background-color: white;
+    border: 1px solid lightgrey;
+}
+
+.titleSpan {
+    max-width: 60%;
+    overflow-x: hidden;
+}
+
+.dueDateSpan {
+    font-size: 12px;
+}
+
+.lists {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 400;
+    font-size: 16px;
+    height: 24px;
+    width: auto;
+    padding: 4px 12px 4px 12px;
+    margin: 8px;
+    align-items: center;
+    border-radius: 4px;
+}
+
+.lists:hover {
+    background-color: var(--lightColor);
+}
+
+.lists:focus {
+    background-color: var(--secondaryColor);
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    /* Remove scrollbar space */
+    background: transparent;
+    /* Optional: just make scrollbar invisible */
+}
