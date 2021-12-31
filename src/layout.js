@@ -1,5 +1,6 @@
-import './project.js';
-import './list.js';
+// import './project.js';
+import * as listFunctions from './list.js';
+import * as projectFunctions from './project.js';
 
 // Main Container
 let container = document.getElementById("container");
@@ -19,7 +20,7 @@ let projectPane = document.createElement("div");
 projectPane.id = 'projectPane';
 // projectPane.innerHTML = 'My Projects';
 
-// list Pane (which will show the list details on the right)
+// List Pane (which will show the list details on the right)
 let listPane = document.createElement("div");
 listPane.id = 'listPane';
 
@@ -28,35 +29,63 @@ content.append(listPane);
 container.append(content);
 
 //list title div
-let listTitleDiv = document.createElement("div");
+let listTitleDiv = document.createElement("input");
 listTitleDiv.id = "listTitle";
+listTitleDiv.type = "text";
 
 //list DueDate Div
-let listDueDateDiv = document.createElement("div");
+let listDueDateDiv = document.createElement("input");
 listDueDateDiv.id = "listDueDate";
+listDueDateDiv.type = "text";
 
 //list Content Div
-let listContentDiv = document.createElement("div");
+let listContentDiv = document.createElement("input");
 listContentDiv.id = "listContent";
+listContentDiv.type = "text";
 
-//list Action buttons
+//List action buttons Div
 let listActionDiv = document.createElement("div");
 listActionDiv.id = "listAction";
 
-//list parent project
+//Save list button
+let saveListButton = document.createElement('button');
+saveListButton.id = "saveListButton";
+saveListButton.innerHTML = "SAVE";
+listActionDiv.append(saveListButton);
+saveListButton.onclick = () => {
+    updateList();
+    showExistingProjects();
+}
+
+//Function to update currently open list
+function updateList() {
+    console.log(currentList);
+    listFunctions.updateListDetails(
+        listTitleDiv.value, listContentDiv.value, listDueDateDiv.value,
+        currentList.listId, currentList.parentProjectId);
+}
+
+//Delete list button
+let deleteListButton = document.createElement('button');
+deleteListButton.id = "deleteListButton";
+deleteListButton.innerHTML = "DELETE";
+listActionDiv.append(deleteListButton)
+
+//list parent project bar
 let listparentProjectDiv = document.createElement("div");
 listparentProjectDiv.id = "listParentProject";
 listparentProjectDiv.innerHTML = "Parent Project:";
 
 function updateProjectDropdownValues() {
-    let projectList = document.getElementById('projectPane').getElementsByClassName('projects');
+    let projectList = projectFunctions.getAllProjects();
+    // console.log(projectList)
     listParentProjectDropdown.innerHTML = "";
     for (let item of projectList) {
-        console.log(item);
         let dropdownItem = document.createElement("option");
         dropdownItem.classList.add("projectDropdownValue");
-        dropdownItem.value = item.firstChild.innerText;
-        dropdownItem.innerHTML = item.firstChild.innerText;
+        let title = item.name;
+        dropdownItem.value = title;
+        dropdownItem.innerHTML = title;
         listParentProjectDropdown.append(dropdownItem);
     }
 }
@@ -78,29 +107,114 @@ newProjectButton.innerHTML = 'NEW PROJECT';
 newProjectButton.id = 'newProjectButton';
 content.append(newProjectButton);
 
+//Ask for project name when a new project is being added
+newProjectButton.addEventListener("click", () => {
+    let newProjName = prompt('Enter Project Name');
+    if (newProjName.trim()) {
+        let newProjectId = addProjectDivToPane(newProjName);
+        projectFunctions.createAndStoreProject(newProjectId, newProjName);
+        updateProjectDropdownValues();
+    }
+});
+
 //Button to add a new To do List
 let newListButton = document.createElement('button');
 newListButton.innerHTML = 'CREATE A LIST';
 newListButton.id = 'newListButton';
 content.append(newListButton);
 
-//Ask for project name when a new project is being added
-newProjectButton.addEventListener("click", () => {
-    let newProjName = prompt('Enter Project Name');
-    if (newProjName != '' && newProjName != null) {
-        addProjectDivToPane(newProjName);
-    }
-});
 
 //Function to add a project Div
 function addProjectDivToPane(projectTitle) {
     let newProject = document.createElement('div');
-    newProject.id = 'projId' + (projectPane.childNodes.length + 1);
+    let pCounter = projectFunctions.getProjectCounter();
+    pCounter += 1;
+    newProject.id = 'projId' + (pCounter);
     newProject.classList.add('projects');
-    newProject.append(document.createElement('p'));
+    newProject.append(document.createElement('div'));
+    newProject.firstChild.classList.add('projectTitle');
     newProject.firstChild.innerHTML = projectTitle;
+    newProject.firstChild.append(...addProjectActionButtons(newProject.id));
     projectPane.append(newProject);
+    projectFunctions.setProjectCounter(pCounter);
     return newProject.id;
+}
+
+//Function for project action buttons
+function addProjectActionButtons(projId) {
+    //Add list button
+    let addListButton = document.createElement("button");
+    addListButton.classList.add(projId);
+    addListButton.classList.add("addListButton");
+    addListButton.innerHTML = '+';
+    addListButton.onclick = () => {
+        let newListTitle = prompt('Adding a new list. Give it a title:');
+        if (newListTitle.trim()) {
+            let listId = addlistDivToProjectDiv(newListTitle, '', projId);
+            listFunctions.createAndStoreList(newListTitle, '', '', listId, projId);
+        }
+    }
+    addListButton.onmouseenter = () => {
+        addListButton.innerHTML = '+ List';
+    }
+    addListButton.onmouseleave = () => {
+        addListButton.innerHTML = '+';
+    }
+    //Delete project button
+    let deleteProjectButton = document.createElement("button");
+    deleteProjectButton.classList.add(projId);
+    deleteProjectButton.classList.add("deleteProjectButton");
+    deleteProjectButton.innerHTML = '-';
+    deleteProjectButton.onclick = () => {
+        if (Object.keys(projectFunctions.getSingleProject(projId).lists).length == 1) {
+            projectFunctions.deleteProject(projId);
+            showExistingProjects();
+        } else {
+            showDeleteProjectModal('Are you sure you want to delete this?',
+                'This project contains some lists. You will lose your data if you delete this project.',
+                'Delete',
+                'No',
+                projId);
+        }
+    }
+    return [addListButton, deleteProjectButton];
+}
+
+//Modal to display when clicking an action
+let modal = document.createElement("div");
+modal.id = "modal";
+modal.append(document.createElement('div'));
+modal.lastChild.id = 'modalTitle';
+modal.append(document.createElement('div'));
+modal.lastChild.id = 'modalContent';
+modal.append(document.createElement('div'));
+modal.lastChild.id = 'modalButtons';
+modal.lastChild.append(document.createElement("button"));
+modal.lastChild.append(document.createElement("button"));
+modal.lastChild.firstChild.id = 'modalButton1';
+modal.lastChild.lastChild.id = 'modalButton2';
+content.append(modal);
+
+
+//Function to display delete project modal
+function showDeleteProjectModal(title, content, buttonYes, buttonNo, projId) {
+    modal.style.display = 'grid';
+    modal.firstChild.innerText = title;
+    modal.childNodes[1].innerText = content;
+    modal.lastChild.firstChild.innerText = buttonYes;
+    modal.lastChild.firstChild.style.backgroundColor = '#EF626C';
+    modal.lastChild.lastChild.innerText = buttonNo;
+    modal.lastChild.lastChild.style.backgroundColor = 'white';
+
+    modal.lastChild.firstChild.onclick = () => {
+        modal.style.display = 'none';
+        projectFunctions.deleteProject(projId);
+        showExistingProjects();
+
+    };
+    modal.lastChild.lastChild.onclick = () => {
+        modal.style.display = 'none';
+    };
 }
 
 //Function to add a list Div
@@ -108,7 +222,10 @@ function addlistDivToProjectDiv(listTitle, listDueDate, projectDivId) {
     let newlist = document.createElement('div');
     newlist.classList.add('lists');
     newlist.classList.add(projectDivId.toString());
-    newlist.id = 'listId' + (document.getElementById(projectDivId).childNodes.length).toString() + projectDivId;
+    let lCounter = listFunctions.getListCounter(projectDivId);
+    lCounter += 1;
+    newlist.id = 'listId' + lCounter.toString() + projectDivId;
+    listFunctions.setListCounter(projectDivId, lCounter);
 
     let titleSpan = document.createElement('span');
     titleSpan.classList.add('titleSpan');
@@ -119,7 +236,7 @@ function addlistDivToProjectDiv(listTitle, listDueDate, projectDivId) {
     dueSpan.classList.add('dueDateSpan');
 
     newlist.addEventListener("click", () => {
-        showListDetails(newlist.id);
+        showListDetails(newlist.id, projectDivId);
     });
 
     newlist.append(titleSpan);
@@ -127,34 +244,79 @@ function addlistDivToProjectDiv(listTitle, listDueDate, projectDivId) {
     document.getElementById(projectDivId).append(newlist);
     return newlist.id;
 }
+let currentList;
+//Function to show selected list's details
+function showListDetails(listId, projId) {
+    currentList = listFunctions.getSingleList(listId, projId);
+    listTitleDiv.value = currentList.title;
+    listDueDateDiv.value = currentList.dueDate;
+    listContentDiv.value = currentList.desc;
+    let projects = document.getElementsByClassName('projects')
+    for (let p = 0; p < projects.length; p++) {
+        if (projects[p].id == projId) {
+            listParentProjectDropdown.selectedIndex = p;
+            break;
+        }
+    }
+}
 
-function showListDetails(listId) {
-    const list = document.getElementById(listId);
-    listTitleDiv.innerHTML = list.firstChild.innerHTML;
-    listDueDateDiv.innerHTML = list.children[1].innerHTML;
-    console.log(list.parentNode.firstChild.innerHTML);
-    listParentProjectDropdown.selectedIndex = parseInt(list.parentNode.id.toString().substring(6,)) - 1;
 
+//Function to load all existing projects from storage
+function showExistingProjects() {
+    projectPane.innerHTML = "";
+    let allProjects = projectFunctions.getAllProjects();
+    for (let item of allProjects) {
+        showProjectDiv(item);
+    }
+}
+
+//Function to show a project from storage on UI
+function showProjectDiv(projectObject) {
+    let newProject = document.createElement('div');
+    newProject.id = projectObject.projectId;
+    newProject.classList.add('projects');
+    newProject.append(document.createElement('div'));
+    newProject.firstChild.classList.add('projectTitle');
+    newProject.firstChild.innerHTML = projectObject.name;
+    newProject.firstChild.append(...addProjectActionButtons(newProject.id));
+    projectPane.append(newProject);
+    let lists = listFunctions.getAllLists(projectObject.projectId)
+    for (let child of lists) {
+        showListDiv(child);
+    }
+}
+
+//Function to show a list from storage on UI
+function showListDiv(listObject) {
+    let newlist = document.createElement('div');
+    newlist.classList.add('lists');
+    newlist.classList.add(listObject.parentProjectId);
+    newlist.id = listObject.listId;
+
+    let titleSpan = document.createElement('span');
+    titleSpan.classList.add('titleSpan');
+    titleSpan.innerHTML = listObject.title;
+
+    let dueSpan = document.createElement('span');
+    dueSpan.innerHTML = listObject.dueDate;
+    dueSpan.classList.add('dueDateSpan');
+
+    newlist.addEventListener("click", () => {
+        showListDetails(newlist.id, listObject.parentProjectId);
+    });
+
+    newlist.append(titleSpan);
+    newlist.append(dueSpan);
+    document.getElementById(listObject.parentProjectId).append(newlist);
+    return newlist.id;
 }
 
 
 
-
-//TESTING
-let projId = addProjectDivToPane('ABCD');
-addlistDivToProjectDiv('pqwe', '23 Dec', projId);
-addlistDivToProjectDiv('wer', '25 Dec', projId);
-addlistDivToProjectDiv('wesdfdsfgr', '25 Dec', projId);
-addlistDivToProjectDiv('wer', '25 Dec', projId);
-addlistDivToProjectDiv('wer', '25 Dec', projId);
-addlistDivToProjectDiv('wersdgdggggghhsdfdg', '25 Dec', projId);
-
-let projId2 = addProjectDivToPane('EFGH');
-addlistDivToProjectDiv('wer', '25 Dec', projId2);
-addlistDivToProjectDiv('wer', '25 Dec', projId2);
-addlistDivToProjectDiv('wer', '25 Dec', projId2);
-
-addProjectDivToPane('PQRS');
-addProjectDivToPane('WXYZ');
+//Execute on page load
+if (localStorage.length == 0) {
+    projectFunctions.setProjectCounter(0);
+}
+showExistingProjects();
 updateProjectDropdownValues();
 
